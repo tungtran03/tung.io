@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>3D Heart with Slow Orbiting Hearts</title>
+<title>3D Heart with Smooth Animation on Mobile</title>
 <style>
   body { margin: 0; background: black; overflow: hidden; }
   canvas { display: block; }
@@ -14,6 +14,7 @@
 let scene = new THREE.Scene();
 let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 2000);
 let renderer = new THREE.WebGLRenderer({antialias: true});
+renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
@@ -31,7 +32,7 @@ function heart3D(numPoints, scale=1) {
 
 // === Trái tim chính ===
 let heartGeo = new THREE.BufferGeometry();
-heartGeo.setAttribute("position", new THREE.BufferAttribute(heart3D(40000, 1.2), 3));
+heartGeo.setAttribute("position", new THREE.BufferAttribute(heart3D(20000, 1.2), 3)); // giảm hạt
 let heartMat = new THREE.PointsMaterial({ size: 0.3, color: 0xff3366, transparent: true, opacity: 0.9 });
 let heart = new THREE.Points(heartGeo, heartMat);
 let heartGroup = new THREE.Group();
@@ -41,7 +42,7 @@ scene.add(heartGroup);
 
 // === Trái tim trắng lớn ===
 let whiteHeartGeo = new THREE.BufferGeometry();
-whiteHeartGeo.setAttribute("position", new THREE.BufferAttribute(heart3D(20000, 2.5), 3));
+whiteHeartGeo.setAttribute("position", new THREE.BufferAttribute(heart3D(10000, 2.5), 3)); // giảm hạt
 let whiteHeartMat = new THREE.PointsMaterial({ size: 0.6, color: 0xffffff, transparent: true, opacity: 0.85 });
 let whiteHeart = new THREE.Points(whiteHeartGeo, whiteHeartMat);
 let whiteHeartGroup = new THREE.Group();
@@ -49,8 +50,8 @@ whiteHeart.rotation.x = -Math.PI / 2;
 whiteHeartGroup.add(whiteHeart);
 scene.add(whiteHeartGroup);
 
-// === Hạt phân tán ===
-let particleCount = 6000;
+// === Hạt phân tán nhẹ ===
+let particleCount = 3000; // giảm hạt
 let pGeo = new THREE.BufferGeometry();
 let pPos = new Float32Array(particleCount*3);
 let colors = new Float32Array(particleCount*3);
@@ -59,41 +60,37 @@ let brightness = [];
 
 for (let i=0;i<particleCount;i++){
   pPos[i*3]=0; pPos[i*3+1]=0; pPos[i*3+2]=0;
-  velocities.push({x:(Math.random()-0.5)*0.5, y:(Math.random()-0.5)*0.5, z:(Math.random()-0.5)*0.5});
+  velocities.push({x:(Math.random()-0.5)*0.4, y:(Math.random()-0.5)*0.4, z:(Math.random()-0.5)*0.4});
   colors[i*3]=Math.random(); colors[i*3+1]=Math.random(); colors[i*3+2]=Math.random();
   brightness.push(Math.random() * Math.PI * 2);
 }
 pGeo.setAttribute("position", new THREE.BufferAttribute(pPos,3));
 pGeo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-let pMat = new THREE.PointsMaterial({ size:0.5, vertexColors:true, transparent:true, opacity:1.0 });
+let pMat = new THREE.PointsMaterial({ size:0.4, vertexColors:true, transparent:true, opacity:1.0 });
 let particles = new THREE.Points(pGeo, pMat);
 scene.add(particles);
 
-// === Trái tim nhỏ quay quanh chậm hơn ===
+// === Trái tim nhỏ quay chậm ===
 let smallHeartGroups = [];
-let smallHeartCount = 10;
+let smallHeartCount = 5; // giảm số trái tim nhỏ
 for (let i=0;i<smallHeartCount;i++){
   let geo = new THREE.BufferGeometry();
-  geo.setAttribute("position", new THREE.BufferAttribute(heart3D(2000, 0.4), 3));
+  geo.setAttribute("position", new THREE.BufferAttribute(heart3D(1000, 0.4), 3)); // giảm hạt
   let mat = new THREE.PointsMaterial({ size: 0.2, color: 0xff99cc, transparent: true, opacity: 0.8 });
   let smallHeart = new THREE.Points(geo, mat);
   smallHeart.rotation.x = -Math.PI / 2;
   let group = new THREE.Group();
   group.add(smallHeart);
   let radius = 60 + i*15;
-  group.userData = {
-    angle: Math.random()*Math.PI*2,
-    speed: (0.002 + Math.random()*0.002), // Giảm tốc độ quay
-    radius: radius
-  };
+  group.userData = { angle: Math.random()*Math.PI*2, speed: 0.001 + Math.random()*0.001, radius: radius }; // quay chậm
   group.position.x = radius * Math.cos(group.userData.angle);
   group.position.z = radius * Math.sin(group.userData.angle);
   smallHeartGroups.push(group);
   scene.add(group);
 }
 
-// === Hạt bắn tia sáng ===
-let sparkCount = 500;
+// === Hạt sáng ===
+let sparkCount = 300; // giảm hạt sáng
 let sparkGeo = new THREE.BufferGeometry();
 let sparkPos = new Float32Array(sparkCount*3);
 let sparkVel = [];
@@ -101,7 +98,7 @@ let sparkColors = new Float32Array(sparkCount*3);
 
 for (let i=0;i<sparkCount;i++){
   sparkPos[i*3]=0; sparkPos[i*3+1]=0; sparkPos[i*3+2]=0;
-  let speed = Math.random()*2+0.5;
+  let speed = Math.random()*1.5+0.3;
   let theta = Math.random()*Math.PI*2;
   let phi = Math.random()*Math.PI;
   sparkVel.push({
