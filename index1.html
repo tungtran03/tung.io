@@ -42,7 +42,7 @@ scene.add(heartGroup);
 
 // === Trái tim trắng giảm hạt ===
 let whiteHeartGeo = new THREE.BufferGeometry();
-whiteHeartGeo.setAttribute("position", new THREE.BufferAttribute(heart3D(15000, 2.5), 3));
+whiteHeartGeo.setAttribute("position", new THREE.BufferAttribute(heart3D(5000, 2.5), 3));
 let whiteHeartMat = new THREE.PointsMaterial({ size: 1.2, color: 0xffffff, transparent: true, opacity: 0.7, depthWrite: false });
 let whiteHeart = new THREE.Points(whiteHeartGeo, whiteHeartMat);
 let whiteHeartGroup = new THREE.Group();
@@ -100,7 +100,7 @@ let miniHearts = [];
 let miniHeartCount = 8;
 for (let i=0;i<miniHeartCount;i++){
   let miniGeo = new THREE.BufferGeometry();
-  miniGeo.setAttribute("position", new THREE.BufferAttribute(heart3D(3000, 0.3), 3));
+  miniGeo.setAttribute("position", new THREE.BufferAttribute(heart3D(5000, 0.3), 3));
   let miniMat = new THREE.PointsMaterial({ size:0.3, color: 0xff3366, transparent:true, opacity:0.9 });
   let miniHeart = new THREE.Points(miniGeo, miniMat);
   let miniGroup = new THREE.Group();
