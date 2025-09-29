@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>3D Heart with Free Floating Small Hearts</title>
+<title>3D Heart with Many Floating Hearts</title>
 <style>
   body { margin: 0; background: black; overflow: hidden; }
   canvas { display: block; }
@@ -45,8 +45,8 @@ heart.rotation.x = -Math.PI / 2;
 heartGroup.add(heart);
 scene.add(heartGroup);
 
-// ===== Hạt bắn ra nhiều màu =====
-let particleCount = 3000;
+// ===== Hạt bắn ra ít hơn =====
+let particleCount = 800; // giảm số lượng hạt
 let pGeo = new THREE.BufferGeometry();
 let pPos = new Float32Array(particleCount*3);
 let colors = new Float32Array(particleCount*3);
@@ -106,9 +106,9 @@ for (let i=0;i<miniHeartCount;i++){
   miniHearts.push(miniGroup);
 }
 
-// ===== Trái tim nhỏ bay tự do =====
+// ===== Trái tim nhỏ bay tự do (tăng số lượng) =====
 let freeHearts = [];
-let freeHeartCount = 15;
+let freeHeartCount = 40; // tăng số lượng trái tim nhỏ bay tự do
 for (let i=0;i<freeHeartCount;i++){
   let freeGeo = new THREE.BufferGeometry();
   freeGeo.setAttribute("position", new THREE.BufferAttribute(heart3D(1500, 0.2), 3));
@@ -124,7 +124,7 @@ for (let i=0;i<freeHeartCount;i++){
   freeGroup.add(freeHeart);
   freeGroup.userData = {
     pos: new THREE.Vector3((Math.random()-0.5)*500, (Math.random()-0.5)*500, (Math.random()-0.5)*500),
-    velocity: new THREE.Vector3((Math.random()-0.5)*0.5, (Math.random()-0.5)*0.5, (Math.random()-0.5)*0.5),
+    velocity: new THREE.Vector3((Math.random()-0.5)*1.0, (Math.random()-0.5)*1.0, (Math.random()-0.5)*1.0),
     twinkle: Math.random()*2
   };
   freeHearts.push(freeGroup);
@@ -139,7 +139,7 @@ function animate(){
   requestAnimationFrame(animate);
   time += 0.02;
 
-  heartGroup.rotation.y -= 0.002;
+  heartGroup.rotation.y -= 0.005; // tăng tốc độ quay trái tim đỏ
 
   // Update hạt bắn ra
   let arr = pGeo.attributes.position.array;
