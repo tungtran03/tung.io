@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>3D Hearts with Pink Orbiting Hearts</title>
+<title>3D Heart with Free Floating Small Hearts</title>
 <style>
   body { margin: 0; background: black; overflow: hidden; }
   canvas { display: block; }
@@ -30,78 +30,73 @@ function heart3D(numPoints, scale=1) {
   return new Float32Array(points);
 }
 
-// === Trái tim đỏ ===
+// ===== Trái tim đỏ lớn =====
 let heartGeo = new THREE.BufferGeometry();
-heartGeo.setAttribute("position", new THREE.BufferAttribute(heart3D(30000, 1.3), 3));
-let heartMat = new THREE.PointsMaterial({ size: 0.8, color: 0xff3366, transparent: true, opacity: 1.0, depthWrite: false });
+heartGeo.setAttribute("position", new THREE.BufferAttribute(heart3D(30000, 2.5), 3));
+let heartMat = new THREE.PointsMaterial({
+  size: 1.0,
+  color: 0xff0033,
+  transparent: true,
+  opacity: 1.0
+});
 let heart = new THREE.Points(heartGeo, heartMat);
 let heartGroup = new THREE.Group();
 heart.rotation.x = -Math.PI / 2;
 heartGroup.add(heart);
 scene.add(heartGroup);
 
-// === Trái tim trắng giảm hạt ===
-let whiteHeartGeo = new THREE.BufferGeometry();
-whiteHeartGeo.setAttribute("position", new THREE.BufferAttribute(heart3D(5000, 2.5), 3));
-let whiteHeartMat = new THREE.PointsMaterial({ size: 1.2, color: 0xffffff, transparent: true, opacity: 0.7, depthWrite: false });
-let whiteHeart = new THREE.Points(whiteHeartGeo, whiteHeartMat);
-let whiteHeartGroup = new THREE.Group();
-whiteHeart.rotation.x = -Math.PI / 2;
-whiteHeartGroup.add(whiteHeart);
-scene.add(whiteHeartGroup);
-
-// === Hạt phân tán nhiều màu ===
-let particleCount = 4000;
+// ===== Hạt bắn ra nhiều màu =====
+let particleCount = 3000;
 let pGeo = new THREE.BufferGeometry();
 let pPos = new Float32Array(particleCount*3);
 let colors = new Float32Array(particleCount*3);
 let velocities = [];
-let brightness = [];
-for (let i=0;i<particleCount;i++){
-  pPos[i*3]=0; pPos[i*3+1]=0; pPos[i*3+2]=0;
-  velocities.push({x:(Math.random()-0.5)*0.4, y:(Math.random()-0.5)*0.4, z:(Math.random()-0.5)*0.4});
-  colors[i*3] = Math.random();
+let twinkleFactors = [];
+
+function generateHeartParticle(i) {
+  let points = heart3D(1, 1);
+  pPos[i*3] = points[0];
+  pPos[i*3+1] = points[1];
+  pPos[i*3+2] = points[2];
+  let dir = new THREE.Vector3(pPos[i*3], pPos[i*3+1], pPos[i*3+2]).normalize();
+  velocities[i] = {
+    x: dir.x * (Math.random()*0.5+0.2) + Math.random()*0.1,
+    y: dir.y * (Math.random()*0.5+0.2) + Math.random()*0.1,
+    z: dir.z * (Math.random()*0.5+0.2) + Math.random()*0.1
+  };
+  colors[i*3]   = Math.random();
   colors[i*3+1] = Math.random();
   colors[i*3+2] = Math.random();
-  brightness.push(Math.random() * Math.PI * 2);
+  twinkleFactors[i] = Math.random() * 2;
 }
+
+for (let i=0;i<particleCount;i++) {
+  generateHeartParticle(i);
+}
+
 pGeo.setAttribute("position", new THREE.BufferAttribute(pPos,3));
 pGeo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-let pMat = new THREE.PointsMaterial({ size:0.8, vertexColors:true, transparent:true, opacity:1.0 });
+let pMat = new THREE.PointsMaterial({
+  size: 0.8,
+  vertexColors: true,
+  transparent: true,
+  opacity: 1.0
+});
 let particles = new THREE.Points(pGeo, pMat);
 scene.add(particles);
 
-// === Hạt nền màu lung linh ===
-let backgroundSparkCount = 2000;
-let bgSparkGeo = new THREE.BufferGeometry();
-let bgSparkPos = new Float32Array(backgroundSparkCount*3);
-let bgSparkVel = [];
-let bgSparkColors = new Float32Array(backgroundSparkCount*3);
-for (let i=0;i<backgroundSparkCount;i++){
-  bgSparkPos[i*3] = (Math.random()-0.5)*600;
-  bgSparkPos[i*3+1] = (Math.random()-0.5)*600;
-  bgSparkPos[i*3+2] = (Math.random()-0.5)*600;
-  let speed = Math.random()*0.6+0.2;
-  let theta = Math.random()*Math.PI*2;
-  let phi = Math.random()*Math.PI;
-  bgSparkVel.push({ x: speed * Math.sin(phi) * Math.cos(theta), y: speed * Math.sin(phi) * Math.sin(theta), z: speed * Math.cos(phi) });
-  bgSparkColors[i*3] = Math.random();
-  bgSparkColors[i*3+1] = Math.random();
-  bgSparkColors[i*3+2] = Math.random();
-}
-bgSparkGeo.setAttribute("position", new THREE.BufferAttribute(bgSparkPos,3));
-bgSparkGeo.setAttribute("color", new THREE.BufferAttribute(bgSparkColors,3));
-let bgSparkMat = new THREE.PointsMaterial({ size:1.2, vertexColors:true, transparent:true, opacity:1.0 });
-let bgSparks = new THREE.Points(bgSparkGeo, bgSparkMat);
-scene.add(bgSparks);
-
-// === Tạo nhóm trái tim nhỏ quay quanh (màu hồng duy nhất) ===
+// ===== Trái tim nhỏ quay quanh màu hồng =====
 let miniHearts = [];
 let miniHeartCount = 8;
 for (let i=0;i<miniHeartCount;i++){
   let miniGeo = new THREE.BufferGeometry();
-  miniGeo.setAttribute("position", new THREE.BufferAttribute(heart3D(5000, 0.3), 3));
-  let miniMat = new THREE.PointsMaterial({ size:0.3, color: 0xff3366, transparent:true, opacity:0.9 });
+  miniGeo.setAttribute("position", new THREE.BufferAttribute(heart3D(3000, 0.3), 3));
+  let miniMat = new THREE.PointsMaterial({
+    size:0.3,
+    color: 0xff66cc,
+    transparent:true,
+    opacity:0.9
+  });
   let miniHeart = new THREE.Points(miniGeo, miniMat);
   let miniGroup = new THREE.Group();
   miniHeart.rotation.x = -Math.PI/2;
@@ -109,6 +104,31 @@ for (let i=0;i<miniHeartCount;i++){
   miniGroup.userData = { radius: 60 + i*20, speed: 0.002 + i*0.0005, angle: Math.random()*Math.PI*2 };
   scene.add(miniGroup);
   miniHearts.push(miniGroup);
+}
+
+// ===== Trái tim nhỏ bay tự do =====
+let freeHearts = [];
+let freeHeartCount = 15;
+for (let i=0;i<freeHeartCount;i++){
+  let freeGeo = new THREE.BufferGeometry();
+  freeGeo.setAttribute("position", new THREE.BufferAttribute(heart3D(1500, 0.2), 3));
+  let freeMat = new THREE.PointsMaterial({
+    size:0.4,
+    color: 0xff66cc,
+    transparent:true,
+    opacity:0.9
+  });
+  let freeHeart = new THREE.Points(freeGeo, freeMat);
+  let freeGroup = new THREE.Group();
+  freeHeart.rotation.x = -Math.PI/2;
+  freeGroup.add(freeHeart);
+  freeGroup.userData = {
+    pos: new THREE.Vector3((Math.random()-0.5)*500, (Math.random()-0.5)*500, (Math.random()-0.5)*500),
+    velocity: new THREE.Vector3((Math.random()-0.5)*0.5, (Math.random()-0.5)*0.5, (Math.random()-0.5)*0.5),
+    twinkle: Math.random()*2
+  };
+  freeHearts.push(freeGroup);
+  scene.add(freeGroup);
 }
 
 camera.position.z = 250;
@@ -120,36 +140,37 @@ function animate(){
   time += 0.02;
 
   heartGroup.rotation.y -= 0.002;
-  whiteHeart.material.opacity = 0.7 + 0.1 * Math.cos(time*2);
 
+  // Update hạt bắn ra
   let arr = pGeo.attributes.position.array;
   for (let i=0;i<particleCount;i++){
     arr[i*3]   += velocities[i].x;
     arr[i*3+1] += velocities[i].y;
     arr[i*3+2] += velocities[i].z;
-    brightness[i] += 0.05;
-  }
-  let b = 1.0 + 0.3 * Math.sin(time*3);
-  pMat.opacity = b;
-  pGeo.attributes.position.needsUpdate = true;
-
-  let bgArr = bgSparkGeo.attributes.position.array;
-  for (let i=0;i<backgroundSparkCount;i++){
-    bgArr[i*3]   += bgSparkVel[i].x;
-    bgArr[i*3+1] += bgSparkVel[i].y;
-    bgArr[i*3+2] += bgSparkVel[i].z;
-    if (Math.abs(bgArr[i*3])>300 || Math.abs(bgArr[i*3+1])>300 || Math.abs(bgArr[i*3+2])>300){
-      bgArr[i*3] = (Math.random()-0.5)*600;
-      bgArr[i*3+1] = (Math.random()-0.5)*600;
-      bgArr[i*3+2] = (Math.random()-0.5)*600;
+    if (Math.abs(arr[i*3])>300 || Math.abs(arr[i*3+1])>300 || Math.abs(arr[i*3+2])>300){
+      generateHeartParticle(i);
     }
   }
-  bgSparkGeo.attributes.position.needsUpdate = true;
+  pGeo.attributes.position.needsUpdate = true;
+  pMat.opacity = 0.6 + 0.4 * Math.abs(Math.cos(time));
 
+  // Quay trái tim nhỏ
   miniHearts.forEach(group => {
     group.userData.angle += group.userData.speed;
     group.position.x = Math.cos(group.userData.angle) * group.userData.radius;
     group.position.z = Math.sin(group.userData.angle) * group.userData.radius;
+  });
+
+  // Bay tự do trái tim nhỏ
+  freeHearts.forEach(group => {
+    group.position.add(group.userData.velocity);
+    group.userData.velocity.x += (Math.random()-0.5)*0.01;
+    group.userData.velocity.y += (Math.random()-0.5)*0.01;
+    group.userData.velocity.z += (Math.random()-0.5)*0.01;
+    group.children[0].material.opacity = 0.6 + 0.4 * Math.abs(Math.cos(time*group.userData.twinkle));
+    if (group.position.length() > 500) {
+      group.position.set((Math.random()-0.5)*500, (Math.random()-0.5)*500, (Math.random()-0.5)*500);
+    }
   });
 
   renderer.render(scene,camera);
