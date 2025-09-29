@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>3D Heart Scene with Vietnamese Text</title>
+<style>
+  body { margin: 0; background: black; overflow: hidden; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+
+<script>
+let scene = new THREE.Scene();
+let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 2000);
+let renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,1));
+renderer.setSize(window.innerWidth,window.innerHeight);
+document.body.appendChild(renderer.domElement);
+
+// Hàm tạo trái tim
+function heart3D(numPoints, scale=1) {
+  let points = [];
+  while(points.length<numPoints){
+    let x=(Math.random()*2-1)*1.5;
+    let y=(Math.random()*2-1)*1.5;
+    let z=(Math.random()*2-1)*1.5;
+    let f=Math.pow(x*x+(9/4)*y*y+z*z-1,3)-x*x*z*z*z-(9/80)*y*y*z*z*z;
+    if(f<=0) points.push(x*11*scale,y*11*scale,z*11*scale);
+  }
+  return new Float32Array(points);
+}
+
+// Trái tim đỏ lớn hơn nữa
+let heartGeo=new THREE.BufferGeometry();
+heartGeo.setAttribute("position",new THREE.BufferAttribute(heart3D(8000,2.8),3)); // scale tăng lên 2.8
+let heartMat=new THREE.PointsMaterial({size:0.6,color:0xff0033,transparent:true,opacity:1.0});
+let heart=new THREE.Points(heartGeo,heartMat);
+let heartGroup=new THREE.Group();
+heart.rotation.x=-Math.PI/2;
+heartGroup.add(heart);
+scene.add(heartGroup);
+
+// Trái tim nhỏ bay tự do
+let smallHearts=[];
+for(let i=0;i<10;i++){
+  let g=new THREE.Group();
+  let sGeo=new THREE.BufferGeometry();
+  sGeo.setAttribute("position",new THREE.BufferAttribute(heart3D(1000,0.4),3));
+  let sMat=new THREE.PointsMaterial({size:0.2,color:0xff66aa,transparent:true,opacity:0.8});
+  let sHeart=new THREE.Points(sGeo,sMat);
+  g.add(sHeart);
+  g.rotation.x=-Math.PI/2;
+  g.position.set((Math.random()-0.5)*400,(Math.random()-0.5)*400,(Math.random()-0.5)*400);
+  g.userData.velocity=new THREE.Vector3((Math.random()-0.5)*0.5,(Math.random()-0.5)*0.5,(Math.random()-0.5)*0.5);
+  scene.add(g);
+  smallHearts.push(g);
+}
+
+// Hạt sáng bắn ra nhiều màu
+let particleCount=300;
+let pGeo=new THREE.BufferGeometry();
+let pPos=new Float32Array(particleCount*3);
+let colors=new Float32Array(particleCount*3);
+let velocities=[];
+function generateHeartParticle(i){
+  let pts=heart3D(1,1);
+  pPos[i*3]=pts[0]; pPos[i*3+1]=pts[1]; pPos[i*3+2]=pts[2];
+  let dir=new THREE.Vector3(pPos[i*3],pPos[i*3+1],pPos[i*3+2]).normalize();
+  velocities[i]={x:dir.x*(Math.random()*0.5+0.2)+Math.random()*0.1,
+                 y:dir.y*(Math.random()*0.5+0.2)+Math.random()*0.1,
+                 z:dir.z*(Math.random()*0.5+0.2)+Math.random()*0.1};
+  colors[i*3]=Math.random(); colors[i*3+1]=Math.random(); colors[i*3+2]=Math.random();
+}
+for(let i=0;i<particleCount;i++) generateHeartParticle(i);
+pGeo.setAttribute("position",new THREE.BufferAttribute(pPos,3));
+pGeo.setAttribute("color",new THREE.BufferAttribute(colors,3));
+let pMat=new THREE.PointsMaterial({size:0.2,vertexColors:true,transparent:true,opacity:1.0});
+let particles=new THREE.Points(pGeo,pMat);
+scene.add(particles);
+
+// Chữ tiếng Việt
+let floatingTexts=[];
+function createTextMesh(text,color,size){
+  let canvas=document.createElement('canvas');
+  let context=canvas.getContext('2d');
+  canvas.width=1024; canvas.height=256;
+  context.font=`${size}px Arial`;
+  context.fillStyle=color;
+  context.textAlign='center';
+  context.textBaseline='middle';
+  context.fillText(text,canvas.width/2,canvas.height/2);
+  let texture=new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearFilter;
+  let material=new THREE.SpriteMaterial({map:texture,transparent:true});
+  let sprite=new THREE.Sprite(material);
+  sprite.scale.set(size*5,size*2,1);
+  return sprite;
+}
+
+for(let i=0;i<5;i++){
+  let textMesh=createTextMesh("iuuu nợn nhứt nhứt nhứt ❤️❤️❤️","#ff66cc",30);
+  textMesh.position.set((Math.random()-0.5)*400,(Math.random()-0.5)*400,(Math.random()-0.5)*400);
+  textMesh.userData.velocity=new THREE.Vector3((Math.random()-0.5)*0.3,(Math.random()-0.5)*0.3,(Math.random()-0.5)*0.3);
+  scene.add(textMesh);
+  floatingTexts.push(textMesh);
+}
+
+camera.position.z=300;
+camera.position.y=0;
+
+let time=0;
+function animate(){
+  requestAnimationFrame(animate);
+  time+=0.005;
+
+  heartGroup.rotation.y-=0.008;
+
+  for(let i=0;i<particleCount;i++){
+    pPos[i*3]+=velocities[i].x; pPos[i*3+1]+=velocities[i].y; pPos[i*3+2]+=velocities[i].z;
+    if(Math.abs(pPos[i*3])>300 || Math.abs(pPos[i*3+1])>300 || Math.abs(pPos[i*3+2])>300) generateHeartParticle(i);
+  }
+  pGeo.attributes.position.needsUpdate=true;
+  pMat.opacity=0.7+0.3*Math.abs(Math.cos(time));
+
+  smallHearts.forEach(h=>{
+    h.position.add(h.userData.velocity);
+    if(h.position.length()>400) h.userData.velocity.negate();
+  });
+
+  floatingTexts.forEach(t=>{
+    t.position.add(t.userData.velocity);
+    if(t.position.length()>400) t.userData.velocity.negate();
+    t.material.opacity=0.8+0.2*Math.abs(Math.cos(time));
+  });
+
+  renderer.render(scene,camera);
+}
+animate();
+
+window.addEventListener("resize",()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+});
+</script>
+</body>
+</html>
