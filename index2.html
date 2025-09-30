@@ -18,6 +18,7 @@ renderer.setPixelRatio(window.devicePixelRatio || 1);
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+// --- Hàm tạo trái tim ---
 function heart3D(numPoints, scale=1) {
   let points = [];
   while (points.length < numPoints) {
@@ -30,15 +31,10 @@ function heart3D(numPoints, scale=1) {
   return new Float32Array(points);
 }
 
-// ===== Trái tim đỏ lớn =====
+// ===== Trái tim chính =====
 let heartGeo = new THREE.BufferGeometry();
 heartGeo.setAttribute("position", new THREE.BufferAttribute(heart3D(30000, 2.5), 3));
-let heartMat = new THREE.PointsMaterial({
-  size: 1.0,
-  color: 0xff0033,
-  transparent: true,
-  opacity: 1.0
-});
+let heartMat = new THREE.PointsMaterial({ size: 1.0, color: 0xff0033, transparent: true, opacity: 1.0 });
 let heart = new THREE.Points(heartGeo, heartMat);
 let heartGroup = new THREE.Group();
 heart.rotation.x = -Math.PI / 2;
@@ -51,7 +47,6 @@ let pGeo = new THREE.BufferGeometry();
 let pPos = new Float32Array(particleCount*3);
 let colors = new Float32Array(particleCount*3);
 let velocities = [];
-let twinkleFactors = [];
 
 function generateHeartParticle(i) {
   let points = heart3D(1, 1);
@@ -67,21 +62,11 @@ function generateHeartParticle(i) {
   colors[i*3]   = Math.random();
   colors[i*3+1] = Math.random();
   colors[i*3+2] = Math.random();
-  twinkleFactors[i] = Math.random() * 2;
 }
-
-for (let i=0;i<particleCount;i++) {
-  generateHeartParticle(i);
-}
-
+for (let i=0;i<particleCount;i++) generateHeartParticle(i);
 pGeo.setAttribute("position", new THREE.BufferAttribute(pPos,3));
 pGeo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-let pMat = new THREE.PointsMaterial({
-  size: 0.8,
-  vertexColors: true,
-  transparent: true,
-  opacity: 1.0
-});
+let pMat = new THREE.PointsMaterial({ size: 0.8, vertexColors: true, transparent: true, opacity: 1.0 });
 let particles = new THREE.Points(pGeo, pMat);
 scene.add(particles);
 
@@ -91,12 +76,7 @@ let miniHeartCount = 8;
 for (let i=0;i<miniHeartCount;i++){
   let miniGeo = new THREE.BufferGeometry();
   miniGeo.setAttribute("position", new THREE.BufferAttribute(heart3D(3000, 0.3), 3));
-  let miniMat = new THREE.PointsMaterial({
-    size:0.3,
-    color: 0xff66cc,
-    transparent:true,
-    opacity:0.9
-  });
+  let miniMat = new THREE.PointsMaterial({ size:0.3, color: 0xff66cc, transparent:true, opacity:0.9 });
   let miniHeart = new THREE.Points(miniGeo, miniMat);
   let miniGroup = new THREE.Group();
   miniHeart.rotation.x = -Math.PI/2;
@@ -112,12 +92,7 @@ let freeHeartCount = 40;
 for (let i=0;i<freeHeartCount;i++){
   let freeGeo = new THREE.BufferGeometry();
   freeGeo.setAttribute("position", new THREE.BufferAttribute(heart3D(1500, 0.2), 3));
-  let freeMat = new THREE.PointsMaterial({
-    size:0.4,
-    color: 0xff66cc,
-    transparent:true,
-    opacity:0.9
-  });
+  let freeMat = new THREE.PointsMaterial({ size:0.4, color: 0xff66cc, transparent:true, opacity:0.9 });
   let freeHeart = new THREE.Points(freeGeo, freeMat);
   let freeGroup = new THREE.Group();
   freeHeart.rotation.x = -Math.PI/2;
@@ -131,6 +106,84 @@ for (let i=0;i<freeHeartCount;i++){
   scene.add(freeGroup);
 }
 
+<!-- ===== Vòng xoáy dưới chân ===== -->
+let swirlParticleCount = 500;
+let swirlGeo = new THREE.BufferGeometry();
+let swirlPos = new Float32Array(swirlParticleCount * 3);
+let swirlVelocities = [];
+let swirlRadius = 80;
+let swirlHeight = -60;
+for (let i = 0; i < swirlParticleCount; i++) {
+    let angle = Math.random() * Math.PI * 2;
+    let radius = swirlRadius + (Math.random() - 0.5) * 10;
+    let height = swirlHeight + (Math.random() - 0.5) * 10;
+    swirlPos[i*3] = Math.cos(angle) * radius;
+    swirlPos[i*3+1] = height;
+    swirlPos[i*3+2] = Math.sin(angle) * radius;
+    swirlVelocities.push({
+        angleSpeed: 0.01 + Math.random()*0.01,
+        radius: radius,
+        heightSpeed: (Math.random()-0.5)*0.02
+    });
+}
+swirlGeo.setAttribute("position", new THREE.BufferAttribute(swirlPos, 3));
+let swirlMat = new THREE.PointsMaterial({
+    size: 1.0,
+    color: 0xff0000, // màu đỏ
+    transparent: true,
+    opacity: 1.0,
+    blending: THREE.AdditiveBlending
+});
+let swirlParticles = new THREE.Points(swirlGeo, swirlMat);
+scene.add(swirlParticles);
+
+// ===== Sao băng mượt =====
+let meteorCount = 20;
+let meteors = [];
+
+function createMeteor() {
+    let length = 50 + Math.random() * 50;
+    let segments = 10;
+    let geometry = new THREE.BufferGeometry();
+    let positions = new Float32Array(segments * 3);
+
+    for (let i = 0; i < segments; i++) {
+        positions[i * 3] = (Math.random() - 0.5) * 1000;
+        positions[i * 3 + 1] = (Math.random() - 0.5) * 1000;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 1000;
+    }
+
+    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+
+    let colors = new Float32Array(segments * 3);
+    for (let i = 0; i < segments; i++) {
+        colors[i * 3] = 1.0;
+        colors[i * 3 + 1] = 1.0;
+        colors[i * 3 + 2] = 1.0;
+    }
+    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+
+    let mat = new THREE.PointsMaterial({
+        size: 0.8,
+        vertexColors: true,
+        transparent: true,
+        opacity: 1.0,
+        blending: THREE.AdditiveBlending
+    });
+
+    let points = new THREE.Points(geometry, mat);
+    points.userData = {
+        speed: 2 + Math.random() * 3,
+        direction: new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize(),
+        length: length,
+        segments: segments
+    };
+
+    scene.add(points);
+    meteors.push(points);
+}
+for (let i = 0; i < meteorCount; i++) createMeteor();
+
 camera.position.z = 250;
 camera.position.y = 0;
 
@@ -140,11 +193,8 @@ function animate(){
   time += 0.02;
 
   heartGroup.rotation.y -= 0.005;
-
-  // ===== Hiệu ứng nhấp nháy cho trái tim đỏ =====
   heart.material.opacity = 0.6 + 0.4 * Math.abs(Math.sin(time * 2));
 
-  // Update hạt bắn ra
   let arr = pGeo.attributes.position.array;
   for (let i=0;i<particleCount;i++){
     arr[i*3]   += velocities[i].x;
@@ -157,14 +207,12 @@ function animate(){
   pGeo.attributes.position.needsUpdate = true;
   pMat.opacity = 0.6 + 0.4 * Math.abs(Math.cos(time));
 
-  // Quay trái tim nhỏ
   miniHearts.forEach(group => {
     group.userData.angle += group.userData.speed;
     group.position.x = Math.cos(group.userData.angle) * group.userData.radius;
     group.position.z = Math.sin(group.userData.angle) * group.userData.radius;
   });
 
-  // Bay tự do trái tim nhỏ
   freeHearts.forEach(group => {
     group.position.add(group.userData.velocity);
     group.userData.velocity.x += (Math.random()-0.5)*0.01;
@@ -175,6 +223,42 @@ function animate(){
       group.position.set((Math.random()-0.5)*500, (Math.random()-0.5)*500, (Math.random()-0.5)*500);
     }
   });
+
+  // Cập nhật sao băng
+  meteors.forEach(meteor => {
+    let posAttr = meteor.geometry.attributes.position;
+    let dir = meteor.userData.direction.clone().multiplyScalar(meteor.userData.speed);
+    for (let i = meteor.userData.segments - 1; i > 0; i--) {
+        posAttr.setXYZ(i, posAttr.getX(i - 1), posAttr.getY(i - 1), posAttr.getZ(i - 1));
+    }
+    posAttr.setXYZ(0, posAttr.getX(0) + dir.x, posAttr.getY(0) + dir.y, posAttr.getZ(0) + dir.z);
+    posAttr.needsUpdate = true;
+
+    if (posAttr.getX(0) > 500 || posAttr.getX(0) < -500 ||
+        posAttr.getY(0) > 500 || posAttr.getY(0) < -500 ||
+        posAttr.getZ(0) > 500 || posAttr.getZ(0) < -500) {
+        for (let i = 0; i < meteor.userData.segments; i++) {
+            posAttr.setXYZ(i, (Math.random() - 0.5) * 1000, (Math.random() - 0.5) * 1000, (Math.random() - 0.5) * 1000);
+        }
+        meteor.userData.direction = new THREE.Vector3(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).normalize();
+    }
+  });
+
+  // Cập nhật vòng xoáy
+  let swirlArr = swirlGeo.attributes.position.array;
+  for (let i = 0; i < swirlParticleCount; i++) {
+    let angle = Math.atan2(swirlArr[i*3+2], swirlArr[i*3]);
+    angle += swirlVelocities[i].angleSpeed;
+    let radius = swirlVelocities[i].radius;
+    swirlArr[i*3] = Math.cos(angle) * radius;
+    swirlArr[i*3+2] = Math.sin(angle) * radius;
+    swirlArr[i*3+1] += swirlVelocities[i].heightSpeed;
+    if (swirlArr[i*3+1] < swirlHeight - 10 || swirlArr[i*3+1] > swirlHeight + 10) {
+        swirlVelocities[i].heightSpeed *= -1;
+    }
+  }
+  swirlGeo.attributes.position.needsUpdate = true;
+  swirlMat.opacity = 0.8 + 0.2*Math.abs(Math.sin(time*4));
 
   renderer.render(scene,camera);
 }
